@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"math/rand"
+	"sort"
 
 	"github.com/rs/zerolog"
 )
@@ -14,9 +15,9 @@ func info(ctx context.Context) BattlesnakeInfoResponse {
 	return BattlesnakeInfoResponse{
 		APIVersion: "1",
 		Author:     "Tiago Queiroz",
-		Color:      "#1a0a74",
-		Head:       "snowman",
-		Tail:       "coffee",
+		Color:      "#b30000",
+		Head:       "smart-caterpillar",
+		Tail:       "round-bum",
 	}
 }
 
@@ -75,32 +76,32 @@ func findNextMove(
 	possibleMoves map[string]bool,
 ) string {
 
-	me := state.You
+	//	me := state.You
 
 	// Find food
-	if me.Health < 75 {
-		zerolog.Ctx(ctx).Debug().Msg("find food!")
-		return gotoFood(ctx, state, possibleMoves)
-	}
+	// if me.Health < 75 {
+	//	zerolog.Ctx(ctx).Debug().Msg("find food!")
+	return gotoNearstFood(ctx, state, possibleMoves)
+	// }
 
 	// loop up and down
-	if possibleMoves["up"] {
-		return "up"
-	}
+	// if possibleMoves["up"] {
+	// 	return "up"
+	// }
 
-	if possibleMoves["left"] {
-		return "left"
-	}
+	// if possibleMoves["left"] {
+	// 	return "left"
+	// }
 
-	if possibleMoves["down"] {
-		return "down"
-	}
+	// if possibleMoves["down"] {
+	// 	return "down"
+	// }
 
-	if possibleMoves["right"] {
-		return "right"
-	}
+	// if possibleMoves["right"] {
+	// 	return "right"
+	// }
 
-	return "down"
+	//	return "down"
 }
 
 // onHarzard returns true if any part of a snake is into
@@ -115,9 +116,8 @@ func onHarzard(me Battlesnake, hazard []Coord) bool {
 	return false
 }
 
-func gotoFood(ctx context.Context, state GameState, possibleMoves map[string]bool) string {
+func gotoNearstFood(ctx context.Context, state GameState, possibleMoves map[string]bool) string {
 	logger := zerolog.Ctx(ctx)
-	logger.Info().Msgf("%s TURN %d: Finding food", state.Game.ID, state.Turn)
 
 	myHead := state.You.Head
 	// If there is no food, move randomly
@@ -125,35 +125,40 @@ func gotoFood(ctx context.Context, state GameState, possibleMoves map[string]boo
 		return randomMove(ctx, state, possibleMoves)
 	}
 
-	for _, food := range state.Board.Food {
-		if myHead.X > food.X {
-			if possibleMoves["left"] {
-				return "left"
-			}
-			continue
-		}
-		if myHead.X < food.X {
-			if possibleMoves["right"] {
-				return "right"
-			}
-			continue
-		}
-
-		if myHead.Y > food.Y {
-			if possibleMoves["down"] {
-				return "down"
-			}
-			continue
-		}
-		if myHead.Y < food.Y {
-			if possibleMoves["up"] {
-				return "up"
-			}
-			continue
-		}
+	food, safe := findNearstFood(state.You.Head, state.Board.Food, state.Board.Hazards)
+	if !safe {
+		logger.Info().Msg("NO SAFE FOOD")
+		return randomMove(ctx, state, possibleMoves)
 	}
 
-	return randomMove(ctx, state, possibleMoves)
+	switch {
+	case myHead.X > food.X:
+		if possibleMoves["left"] {
+			return "left"
+		}
+		fallthrough
+
+	case myHead.X < food.X:
+		if possibleMoves["right"] {
+			return "right"
+		}
+		fallthrough
+
+	case myHead.Y > food.Y:
+		if possibleMoves["down"] {
+			return "down"
+		}
+		fallthrough
+
+	case myHead.Y < food.Y:
+		if possibleMoves["up"] {
+			return "up"
+		}
+		fallthrough
+
+	default:
+		return randomMove(ctx, state, possibleMoves)
+	}
 }
 
 func movesToSlice(possibleMoves map[string]bool) []string {
@@ -328,4 +333,49 @@ func safeMoves(
 	}
 
 	return possibleMoves
+}
+
+// findNearstFood returns the nearst food that is not in
+// a hazard sauce
+func findNearstFood(head Coord, foods []Coord, hazard []Coord) (Coord, bool) {
+	hazardSet := map[Coord]struct{}{}
+	for _, h := range hazard {
+		hazardSet[h] = struct{}{}
+	}
+
+	foodSet := map[Coord]struct{}{}
+	for _, h := range foods {
+		foodSet[h] = struct{}{}
+	}
+
+	safeFood := []struct {
+		p    Coord
+		dist float64
+	}{}
+
+	for food := range foodSet {
+		if _, notSafeFood := hazardSet[food]; notSafeFood {
+			continue
+		}
+
+		p := struct {
+			p    Coord
+			dist float64
+		}{
+			p:    food,
+			dist: dist(head, food),
+		}
+
+		safeFood = append(safeFood, p)
+	}
+
+	if len(safeFood) == 0 {
+		return Coord{}, false
+	}
+
+	sort.Slice(safeFood, func(i, j int) bool {
+		return safeFood[i].dist < safeFood[j].dist
+	})
+
+	return safeFood[0].p, true
 }
