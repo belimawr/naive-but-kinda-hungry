@@ -196,7 +196,8 @@ func randomMove(
 	return safeMovesSlice[rand.Intn(len(safeMovesSlice))]
 }
 
-func nextPossibleMoves(head Coord) []Coord {
+// adjacentPoints returns the adjacent points to any point
+func adjacentPoints(head Coord) []Coord {
 	moves := []Coord{}
 	moves = append(moves, Coord{X: head.X + 1, Y: head.Y})
 	moves = append(moves, Coord{X: head.X - 1, Y: head.Y})
@@ -281,7 +282,7 @@ func safeMoves(
 				continue
 			}
 
-			for _, p := range nextPossibleMoves(s.Head) {
+			for _, p := range adjacentPoints(s.Head) {
 				noGoCoords[p] = struct{}{}
 			}
 		}
