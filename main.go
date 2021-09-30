@@ -74,31 +74,38 @@ type BattlesnakeMoveResponse struct {
 	Shout string `json:"shout,omitempty"`
 }
 
-// HTTP Handlers
-
 func HandleIndex(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	logger := zerolog.Ctx(ctx)
+
 	response := info(ctx)
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		zerolog.Ctx(ctx).Error().Err(err).Msg("ERROR: Failed to encode info response")
+		logger.Error().Err(err).Msg("Failed to write info response")
 	}
 }
 
 func HandleStart(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := zerolog.Ctx(ctx)
+
 	state := GameState{}
 	if err := json.NewDecoder(r.Body).Decode(&state); err != nil {
-		zlog.Printf("ERROR: Failed to decode start json, %s", err)
+		logger.Error().Err(err).Msg("Failed to decode start json")
 		return
 	}
 
 	start(r.Context(), state)
+
+	// The response is ignored, so we just set the status code
+	w.WriteHeader(http.StatusOK)
 }
 
 func HandleMove(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := zerolog.Ctx(ctx)
+
 	state := GameState{}
 	if err := json.NewDecoder(r.Body).Decode(&state); err != nil {
 		logger.Error().Err(err).Msg("Failed to decode move json")
@@ -117,22 +124,25 @@ func HandleMove(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		logger.Error().Err(err).Msg("Failed to encode move response")
+		logger.Error().Err(err).Msg("Failed to write move response")
 		return
 	}
 }
 
 func HandleEnd(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := zerolog.Ctx(ctx)
+
 	state := GameState{}
-	err := json.NewDecoder(r.Body).Decode(&state)
-	if err != nil {
-		zlog.Printf("ERROR: Failed to decode end json, %s", err)
+	if err := json.NewDecoder(r.Body).Decode(&state); err != nil {
+		logger.Error().Err(err).Msg("Failed to decode end json")
 		return
 	}
 
 	end(r.Context(), state)
 
-	// Nothing to respond with here
+	// The response is ignored, so we just set the status code
+	w.WriteHeader(http.StatusOK)
 }
 
 func main() {
