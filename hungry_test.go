@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 )
@@ -104,4 +107,46 @@ func TestSomething(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestHungryCases(t *testing.T) {
+	testCases := map[string][]string{
+		"path_to_nearst_food_blockes": {"right", "up"},
+	}
+
+	for name, expected := range testCases {
+		t.Run(name, func(t *testing.T) {
+			state := loadJSON(t, name)
+			move := hungry(context.Background(), state)
+
+			valid := false
+			for _, m := range expected {
+				if move == m {
+					valid = true
+					break
+				}
+			}
+
+			if !valid {
+				t.Errorf("got invalid move '%s'", move)
+			}
+		})
+	}
+}
+
+func loadJSON(t *testing.T, name string) GameState {
+	t.Helper()
+
+	fpath := fmt.Sprintf("testdata/%s.json", name)
+	data, err := os.ReadFile(fpath)
+	if err != nil {
+		t.Fatalf("reading file %q: %v", fpath, err)
+	}
+
+	state := GameState{}
+	if err := json.Unmarshal(data, &state); err != nil {
+		t.Fatalf("unmarshaling data: %v", err)
+	}
+
+	return state
 }

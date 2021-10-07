@@ -45,7 +45,21 @@ func hungry(ctx context.Context, state GameState) string {
 	}
 
 	if len(dists) == 0 {
+		// If cannot go the the nearst food, random move to a safe place
+		zerolog.Ctx(ctx).Info().Msg("cannot go to food, random safe move")
+		safe := []MoveCoord{}
+		for _, move := range possibleMoves {
+			if board[move.X][move.Y] < 0 {
+				safe = append(safe, move)
+			}
+		}
+
+		if len(safe) != 0 {
+			return safe[rand.Intn(len(safe))].String()
+		}
+
 		zerolog.Ctx(ctx).Info().Msg("NO SAFE MOVES, going down")
+		fmt.Println(gameMapToString(board))
 		return "down"
 	}
 
@@ -78,14 +92,12 @@ func possibleMoves(board BoardMap, head Coord, size int) []MoveCoord {
 		}
 
 		if isSnake(board[p.X][p.Y]) {
-			//			fmt.Println("isSnake: ", p)
 			continue
 		}
 
 		possibleMoves = append(possibleMoves, MoveCoord{Move(i), p})
 	}
 
-	fmt.Println("possibleMoves", possibleMoves)
 	return possibleMoves
 }
 
