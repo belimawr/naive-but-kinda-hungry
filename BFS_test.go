@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -92,68 +90,24 @@ func TestBFSDistances(t *testing.T) {
 		}
 	}
 }
-
-// func TestShortestPath(t *testing.T) {
-// 	j := NewNode(10)
-// 	i := NewNode(9)
-// 	h := NewNode(8)
-// 	g := NewNode(7)
-// 	f := NewNode(6, i, j)
-// 	e := NewNode(5)
-// 	d := NewNode(4, g, h)
-// 	c := NewNode(3, e, f)
-// 	b := NewNode(2)
-// 	a := NewNode(1, b, c, d)
-
-// 	distances := BFSDistances(a)
-// 	got := shortestPath(a, h, distances)
-
-// 	fmt.Print(got)
-// }
-
-var mapNameToID = map[string]int{
-	"A": 1,
-	"B": 2,
-	"C": 3,
-	"D": 4,
-	"E": 5,
-	"F": 6,
-	"G": 7,
-	"H": 8,
-	"I": 9,
-	"J": 10,
-}
-
-var mapNode = map[int]string{
-	1:  "A",
-	2:  "B",
-	3:  "C",
-	4:  "D",
-	5:  "E",
-	6:  "F",
-	7:  "G",
-	8:  "H",
-	9:  "I",
-	10: "J",
-}
-
 func TestMakrSnakes(t *testing.T) {
 	state := GameState{
 		Board: Board{
 			Snakes: []Battlesnake{
 				{
 					Body: []Coord{{1, 0}, {1, 1}, {1, 2}},
+					Head: Coord{1, 0},
 				},
 			},
 		},
 	}
-	expected := GameMap{
+	expected := BoardMap{
 		[]int{Unitialised, Unitialised, Unitialised}, // x = 0
-		[]int{SnakeHead, SnakeBody, SnakeBody},       // x = 1
+		[]int{SnakeHead, SnakeBody, SnakeTail},       // x = 1
 		[]int{Unitialised, Unitialised, Unitialised}, // x = 2
 	}
 
-	board := NewGameMap(3)
+	board := NewBoardMap(3)
 
 	MarkSnakes(board, state)
 
@@ -169,7 +123,13 @@ func TestCalculateDistanceFromFood(t *testing.T) {
 			Height: 5,
 			Snakes: []Battlesnake{
 				{
-					Body: []Coord{{1, 0}, {1, 1}, {1, 2}},
+					Body: []Coord{{X: 1, Y: 0}, {X: 1, Y: 1}, {X: 1, Y: 2}},
+					Head: Coord{1, 0},
+				},
+
+				{
+					Body: []Coord{{X: 4, Y: 2}, {X: 4, Y: 1}, {X: 4, Y: 0}},
+					Head: Coord{4, 2},
 				},
 			},
 			Food: []Coord{{0, 0}, {4, 4}},
@@ -177,44 +137,24 @@ func TestCalculateDistanceFromFood(t *testing.T) {
 	}
 
 	// Visual representation is diferent from the data representation
-	expected := GameMap{
-		[]int{0, 1, 2, 3, 4},
-		[]int{-3, -2, -2, 4, 3},
-		[]int{6, 5, 4, 3, 2},
-		[]int{5, 4, 3, 2, 1},
-		[]int{4, 3, 2, 1, 0},
+	expected := BoardMap{
+		[]int{0, 1, 2, 3, 4},    // X = 0
+		[]int{-3, -2, -4, 4, 3}, // X = 1
+		[]int{6, 5, 4, 3, 2},    // X = 2
+		[]int{5, 4, 3, 2, 1},    // X = 3
+		[]int{-4, -2, -3, 1, 0}, // X = 4
 	}
 
-	board := NewGameMap(5)
-	oldBoard := printGameMap(board) // For debugging
+	board := NewBoardMap(5)
 
 	MarkSnakes(board, state)
+
 	CalculateDistanceFromFood(board, state)
 
 	if !reflect.DeepEqual(expected, board) {
-		t.Errorf("original board:\n%s\ndid not expect:\n%s\n%s\n",
-			oldBoard,
-			printGameMap(board),
-			printGameMap(expected))
+		t.Errorf("expecting:\n%s\ngot:\n%s\n",
+			gameMapToString(expected),
+			gameMapToString(board))
 	}
-}
-
-func JSONPrint(v interface{}) (err error) {
-	b, err := json.MarshalIndent(v, "", "  ")
-	if err == nil {
-		fmt.Println(string(b))
-	}
-	return
-}
-
-func printGameMap(m GameMap) string {
-	b := &strings.Builder{}
-	for x := len(m) - 1; x >= 0; x-- {
-		for y := range m[x] {
-			fmt.Fprintf(b, "%5d", m[x][y])
-		}
-		fmt.Fprintln(b, "")
-	}
-
-	return b.String()
+	fmt.Println(gameMapToString(board))
 }
