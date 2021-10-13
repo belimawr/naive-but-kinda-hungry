@@ -16,6 +16,7 @@ func JSONPrint(v interface{}) (err error) {
 
 func gameMapToString(m BoardMap) string {
 	b := &strings.Builder{}
+	b.WriteRune('\n')
 	size := len(m)
 
 	for y := size - 1; y >= 0; y-- {
@@ -31,7 +32,7 @@ func gameMapToString(m BoardMap) string {
 			case Food:
 				token = "F"
 			case LookAheadHead:
-				token = "+"
+				token = "#"
 			default:
 				token = fmt.Sprintf("%5d", val)
 			}

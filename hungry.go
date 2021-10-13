@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math/rand"
 	"sort"
 
@@ -59,14 +58,12 @@ func hungry(ctx context.Context, state GameState) string {
 		}
 
 		zerolog.Ctx(ctx).Info().Msg("NO SAFE MOVES, going down")
-		fmt.Println(gameMapToString(board))
 		return "down"
 	}
 
 	// sort by distance to food
 	sort.Slice(dists, func(i, j int) bool { return dists[i].dist < dists[j].dist })
 
-	fmt.Println("Moves sorted by distance: ", dists)
 	// put all moves that are equally further from the a food
 	// into a slice
 	closest := dists[0].dist

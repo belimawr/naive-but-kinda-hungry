@@ -139,11 +139,11 @@ func TestCalculateDistanceFromFood(t *testing.T) {
 
 	// Visual representation is diferent from the data representation
 	expected := BoardMap{
-		[]int{Food, 1, 2, 3, 4},                                     // X = 0
-		[]int{SnakeHead, SnakeBody, SnakeTail, 4, 3},                // X = 1
-		[]int{LookAheadHead, 5, 4, 3, 2},                            // X = 2
-		[]int{7, 6, LookAheadHead, 2, 1},                            // X = 3
-		[]int{SnakeTail, SnakeBody, SnakeHead, LookAheadHead, Food}, // X = 4
+		[]int{Food, 1, 2, 3, 4},                         // X = 0
+		[]int{SnakeHead, SnakeBody, SnakeTail, 4, 3},    // X = 1
+		[]int{6, 5, 4, 3, 2},                            // X = 2
+		[]int{5, 4, 3, 2, 1},                            // X = 3
+		[]int{SnakeTail, SnakeBody, SnakeHead, 1, Food}, // X = 4
 	}
 
 	board := NewBoardMap(5)
@@ -157,5 +157,4 @@ func TestCalculateDistanceFromFood(t *testing.T) {
 			gameMapToString(expected),
 			gameMapToString(board))
 	}
-	fmt.Println(gameMapToString(board))
 }

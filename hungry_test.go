@@ -2,10 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 )
@@ -111,7 +108,9 @@ func TestSomething(t *testing.T) {
 
 func TestHungryCases(t *testing.T) {
 	testCases := map[string][]string{
-		"path_to_nearst_food_blockes": {"right", "up"},
+		"food_is_blocked_by_snake":    {"up", "down", "left"},
+		"3 snakes, 1 food":            {"up", "right"},
+		"4_snakes,_2_reachable_foods": {"up"},
 	}
 
 	for name, expected := range testCases {
@@ -134,19 +133,21 @@ func TestHungryCases(t *testing.T) {
 	}
 }
 
-func loadJSON(t *testing.T, name string) GameState {
-	t.Helper()
-
-	fpath := fmt.Sprintf("testdata/%s.json", name)
-	data, err := os.ReadFile(fpath)
-	if err != nil {
-		t.Fatalf("reading file %q: %v", fpath, err)
+func TestMarkObstacles(t *testing.T) {
+	testCases := []string{
+		"3 snakes, 1 food",
+		"food is blocked by snake",
 	}
 
-	state := GameState{}
-	if err := json.Unmarshal(data, &state); err != nil {
-		t.Fatalf("unmarshaling data: %v", err)
-	}
+	for _, name := range testCases {
+		t.Run(name, func(t *testing.T) {
+			state := loadJSON(t, name)
 
-	return state
+			board := NewBoardMap(state.Board.Width)
+			MarkObstacles(board, state)
+			ValidateWithGoldenFiles(t, board, func() {
+				t.Log(gameMapToString(board))
+			})
+		})
+	}
 }

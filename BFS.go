@@ -36,13 +36,15 @@ func MarkObstacles(board BoardMap, state GameState) {
 		board[snake.Head.X][snake.Head.Y] = SnakeHead
 
 		// Look ahead
-		for _, p := range adjacentPoints(snake.Head) {
-			if isOutOfBounds(p, state.Board.Height, state.Board.Width) {
-				continue
-			}
+		if snake.ID != state.You.ID {
+			for _, p := range adjacentPoints(snake.Head) {
+				if isOutOfBounds(p, state.Board.Height, state.Board.Width) {
+					continue
+				}
 
-			if board[p.X][p.Y] == Unitialised {
-				board[p.X][p.Y] = LookAheadHead
+				if board[p.X][p.Y] == Unitialised {
+					board[p.X][p.Y] = LookAheadHead
+				}
 			}
 		}
 
