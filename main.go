@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/hlog"
 	zlog "github.com/rs/zerolog/log"
@@ -146,20 +148,38 @@ func HandleEnd(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := os.Getenv("PORT")
-	if len(port) == 0 {
-		port = "3000"
-	}
-
 	logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 	// Replace the global logger
 	log.SetFlags(0)
 	log.SetOutput(logger)
 
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "4000"
+	}
+
+	debugEnv := os.Getenv("DEBUG")
+	if len(debugEnv) == 0 {
+		debugEnv = "false"
+	}
+	debug, err := strconv.ParseBool(debugEnv)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("parsing DEBUG environment variable")
+	}
+
 	r := chi.NewRouter()
 	r.Use(hlog.NewHandler(logger))
 	r.Use(hlog.RequestIDHandler("req_id", "Request-Id"))
+
+	// Allow any browser to call the API for debug purpuses
+	if debug {
+		logger.Info().Msg("Enabling CORS")
+		r.Use(cors.Handler(cors.Options{
+			AllowedOrigins: []string{"https://*", "http://*"},
+			AllowedMethods: []string{"GET", "POST", "OPTIONS"},
+		}))
+	}
 
 	r.Get("/", HandleIndex)
 	r.Post("/start", HandleStart)
