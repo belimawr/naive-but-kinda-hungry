@@ -30,6 +30,8 @@ func gameMapToString(m BoardMap) string {
 				token = "T"
 			case Food:
 				token = "F"
+			case LookAheadHead:
+				token = "+"
 			default:
 				token = fmt.Sprintf("%5d", val)
 			}

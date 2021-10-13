@@ -3,11 +3,13 @@ package main
 type BoardMap [][]int
 
 const (
-	Unitialised = -1
-	SnakeBody   = -2
-	SnakeHead   = -3
-	SnakeTail   = -4
-	Food        = 0
+	Unitialised   = -1
+	SnakeBody     = -2
+	SnakeHead     = -3
+	SnakeTail     = -4
+	LookAheadHead = -5
+	Sauce         = -6
+	Food          = 0
 )
 
 // NewBoardMap returns a initialised NewBoardMap
@@ -24,11 +26,25 @@ func NewBoardMap(size int) BoardMap {
 	return board
 }
 
-// MarkSnakes marks all snakes into the board
-// heads and tails are marked with different values
-func MarkSnakes(board BoardMap, state GameState) {
+// MarkObstacles marks everything we need to be awere of
+// on the board:
+// - Snakes: head, body and tails
+// - Possible snakes next head position
+// - Hazard sauce
+func MarkObstacles(board BoardMap, state GameState) {
 	for _, snake := range state.Board.Snakes {
 		board[snake.Head.X][snake.Head.Y] = SnakeHead
+
+		// Look ahead
+		for _, p := range adjacentPoints(snake.Head) {
+			if isOutOfBounds(p, state.Board.Height, state.Board.Width) {
+				continue
+			}
+
+			if board[p.X][p.Y] == Unitialised {
+				board[p.X][p.Y] = LookAheadHead
+			}
+		}
 
 		for i := 1; i < len(snake.Body)-1; i++ {
 			p := snake.Body[i]
@@ -61,7 +77,7 @@ func CalculateDistanceFromFood(board BoardMap, state GameState) {
 			}
 
 			x, y := adjacent.X, adjacent.Y
-			// skip points that have been processes or are snakes
+			// skip points that have been processed or are snakes
 			if board[x][y] != Unitialised {
 				continue
 			}

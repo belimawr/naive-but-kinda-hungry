@@ -17,7 +17,7 @@ import (
 func hungry(ctx context.Context, state GameState) string {
 	board := NewBoardMap(state.Board.Height) // We assume it's a square
 
-	MarkSnakes(board, state)
+	MarkObstacles(board, state)
 	CalculateDistanceFromFood(board, state)
 
 	head := state.You.Head

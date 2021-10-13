@@ -90,6 +90,7 @@ func TestBFSDistances(t *testing.T) {
 		}
 	}
 }
+
 func TestMakrSnakes(t *testing.T) {
 	state := GameState{
 		Board: Board{
@@ -109,7 +110,7 @@ func TestMakrSnakes(t *testing.T) {
 
 	board := NewBoardMap(3)
 
-	MarkSnakes(board, state)
+	MarkObstacles(board, state)
 
 	if !reflect.DeepEqual(board, expected) {
 		t.Errorf("expecting:\n%#v\ngot:\n%#v", expected, board)
@@ -138,16 +139,16 @@ func TestCalculateDistanceFromFood(t *testing.T) {
 
 	// Visual representation is diferent from the data representation
 	expected := BoardMap{
-		[]int{0, 1, 2, 3, 4},    // X = 0
-		[]int{-3, -2, -4, 4, 3}, // X = 1
-		[]int{6, 5, 4, 3, 2},    // X = 2
-		[]int{5, 4, 3, 2, 1},    // X = 3
-		[]int{-4, -2, -3, 1, 0}, // X = 4
+		[]int{Food, 1, 2, 3, 4},                                     // X = 0
+		[]int{SnakeHead, SnakeBody, SnakeTail, 4, 3},                // X = 1
+		[]int{LookAheadHead, 5, 4, 3, 2},                            // X = 2
+		[]int{7, 6, LookAheadHead, 2, 1},                            // X = 3
+		[]int{SnakeTail, SnakeBody, SnakeHead, LookAheadHead, Food}, // X = 4
 	}
 
 	board := NewBoardMap(5)
 
-	MarkSnakes(board, state)
+	MarkObstacles(board, state)
 
 	CalculateDistanceFromFood(board, state)
 
